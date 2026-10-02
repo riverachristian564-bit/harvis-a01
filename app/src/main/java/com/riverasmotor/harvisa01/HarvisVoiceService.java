@@ -1,13 +1,13 @@
 package com.riverasmotor.harvisa01;
 
-import android.app.*;import android.content.*;import android.os.*;import android.speech.tts.TextToSpeech;import androidx.core.app.NotificationCompat;import org.json.*;import org.vosk.Model;import org.vosk.Recognizer;import org.vosk.android.*;import java.io.*;import java.net.*;import java.nio.charset.StandardCharsets;import java.util.*;
+import android.app.*;import android.content.*;import android.os.*;import android.speech.tts.TextToSpeech;import org.json.*;import org.vosk.Model;import org.vosk.Recognizer;import org.vosk.android.*;import java.io.*;import java.net.*;import java.nio.charset.StandardCharsets;import java.util.*;
 
 public class HarvisVoiceService extends Service implements RecognitionListener, TextToSpeech.OnInitListener {
  static final String CH="harvis_voice"; static final int ID=1701; Model model; Recognizer rec; SpeechService speech; TextToSpeech tts; boolean running=true;
  @Override public void onCreate(){super.onCreate();createChannel();startForeground(ID,note("HARVIS // VOZ EN SEGUNDO PLANO"));tts=new TextToSpeech(this,this);StorageService.unpack(this,"model-es","model-es",m->{model=m;startListening();},e->update("HARVIS // VOSK ERROR"));}
  @Override public int onStartCommand(Intent i,int f,int id){running=true;if(model!=null&&speech==null)startListening();return START_STICKY;}
  void createChannel(){if(Build.VERSION.SDK_INT>=26){NotificationChannel c=new NotificationChannel(CH,"HARVIS Voice",NotificationManager.IMPORTANCE_LOW);c.setDescription("HARVIS activo en segundo plano");getSystemService(NotificationManager.class).createNotificationChannel(c);}}
- Notification note(String s){Intent open=new Intent(this,MainActivity.class);PendingIntent pi=PendingIntent.getActivity(this,0,open,Build.VERSION.SDK_INT>=23?PendingIntent.FLAG_IMMUTABLE:0);return new NotificationCompat.Builder(this,CH).setContentTitle("HARVIS MARK I").setContentText(s).setSmallIcon(android.R.drawable.ic_btn_speak_now).setOngoing(true).setContentIntent(pi).build();}
+ Notification note(String s){Intent open=new Intent(this,MainActivity.class);int flags=Build.VERSION.SDK_INT>=23?PendingIntent.FLAG_IMMUTABLE:0;PendingIntent pi=PendingIntent.getActivity(this,0,open,flags);Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,CH):new Notification.Builder(this);b.setContentTitle("HARVIS MARK I").setContentText(s).setSmallIcon(android.R.drawable.ic_btn_speak_now).setOngoing(true).setContentIntent(pi);return b.build();}
  void update(String s){((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(ID,note(s));}
  void startListening(){try{stopListening();rec=new Recognizer(model,16000f);speech=new SpeechService(rec,16000f);speech.startListening(this);update("HARVIS // ESCUCHANDO");}catch(Exception e){update("HARVIS // AUDIO ERROR");}}
  void stopListening(){if(speech!=null){speech.stop();speech.shutdown();speech=null;}if(rec!=null){rec.close();rec=null;}}
