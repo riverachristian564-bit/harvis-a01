@@ -2,7 +2,7 @@ name: Build HARVIS A01 APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, mk1-v1.2-vosk-ui ]
   workflow_dispatch:
 
 jobs:
@@ -20,13 +20,31 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.2'
+      - name: Fetch Spanish Vosk model
+        run: |
+          python3 - <<'PY'
+          import urllib.request, zipfile, os, shutil
+          url='https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip'
+          urllib.request.urlretrieve(url,'model.zip')
+          with zipfile.ZipFile('model.zip') as z: z.extractall('modeltmp')
+          src='modeltmp/vosk-model-small-es-0.42'
+          dst='app/src/main/assets/model-es'
+          os.makedirs(os.path.dirname(dst),exist_ok=True)
+          if os.path.exists(dst): shutil.rmtree(dst)
+          shutil.copytree(src,dst)
+          open(dst+'/uuid','w').write('harvis-mk1-es-042')
+          PY
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk HARVIS-A01.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk HARVIS-Mark-I-Mobile-1.2-VOSK.apk
+      - name: Inspect APK
+        run: |
+          ls -lh HARVIS-Mark-I-Mobile-1.2-VOSK.apk
+          unzip -l HARVIS-Mark-I-Mobile-1.2-VOSK.apk | grep -E 'libvosk|model-es|libjnidispatch' | head -40
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HARVIS-A01-APK
-          path: HARVIS-A01.apk
+          name: HARVIS-MK1-1.2-VOSK
+          path: HARVIS-Mark-I-Mobile-1.2-VOSK.apk
           if-no-files-found: error
