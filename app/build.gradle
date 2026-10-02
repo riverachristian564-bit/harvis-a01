@@ -10,8 +10,8 @@ android {
         applicationId 'com.riverasmotor.harvisa01'
         minSdk 23
         targetSdk 29
-        versionCode 4
-        versionName '1.2.0-MK1-VOSK'
+        versionCode 5
+        versionName '1.3.0-MK1-UI-VOICE'
         ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
     }
     compileOptions {
